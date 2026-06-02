@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Missed Attacks Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+body { font-family: Arial; margin: 20px; }
+#dropZone {
+  border: 2px dashed #888;
+  padding: 40px;
+  text-align: center;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+h2 { margin-bottom: 5px; }
+.ranking {
+  background: #f7f7f7;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+th, td { border: 1px solid #ccc; padding: 6px; }
+
+.player {
+  color: blue;
+  cursor: pointer;
+  position: relative;
+}
+
+.tooltip {
+  display: none;
+  position: absolute;
+  background: #333;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  top: 20px;
+  left: 0;
+  z-index: 10;
+  width: 320px;
+}
+
+.player:hover .tooltip {
+  display: block;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Missed Attacks Dashboard</h1>
+
+<div id="dropZone">
+  Sleep Excel hier of klik om te uploaden
+  <input type="file" id="fileInput" style="display:none;">
+</div>
+
+<div id="output"></div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.onclick = () => fileInput.click();
+fileInput.onchange = e => handleFile(e.target.files[0]);
+
+dropZone.ondragover = e => e.preventDefault();
+dropZone.ondrop = e => {
+  e.preventDefault();
+  handleFile(e.dataTransfer.files[0]);
+};
+
+function excelDateToJSDate(excelDate) {
+  return new Date((excelDate - 25569) * 86400 * 1000);
+}
+
+function getMonthName(date) {
+  return date.toLocaleDateString('nl-NL', {
+    year: 'numeric',
+    month: 'long'
+  });
+}
+
+function handleFile(file) {
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, {type: 'array'});
+    const sheet = workbook.Sheets['Missed Attacks'];
+    const json = XLSX.utils.sheet_to_json(sheet);
+
+    processData(json);
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+function processData(data) {
+  const result = {};
+
+  data.forEach(row => {
+    const name = row['Name'];
+    const missed = row['Missed'];
+    const war = row['Enemy Clan'];
+    const dateRaw = row['Ended'];
+
+    if (!name || !dateRaw) return;
+
+    const date = excelDateToJSDate(dateRaw);
+    const monthKey = date.getFullYear() + '-' + date.getMonth();
+    const monthName = getMonthName(date);
+
+    if (!result[monthKey]) {
+      result[monthKey] = {
+        label: monthName,
+        players: {}
+      };
+    }
+
+    if (!result[monthKey].players[name]) {
+      result[monthKey].players[name] = {
+        total: 0,
+        details: []
+      };
+    }
+
+    result[monthKey].players[name].total += missed;
+    result[monthKey].players[name].details.push({
+      date: date.toLocaleDateString(),
+      war,
+      missed
+    });
+  });
+
+  render(result);
+}
+
+function render(data) {
+  let html = '';
+
+  Object.values(data)
+    .sort((a, b) => new Date(b.label) - new Date(a.label))
+    .forEach(month => {
+
+      const players = Object.entries(month.players)
+        .sort((a, b) => b[1].total - a[1].total);
+
+      // 🥇 Ranglijst (Top 5)
+      html += `<h2>${month.label}</h2>`;
+      html += `<div class="ranking"><strong>Top missers:</strong><br>`;
+      players.slice(0, 5).forEach((p, i) => {
+        html += `${i+1}. ${p[0]} (${p[1].total})<br>`;
+      });
+      html += `</div>`;
+
+      // 📋 Tabel
+      html += '<table><tr><th>Speler</th><th>Gemist</th></tr>';
+
+      players.forEach(([name, info]) => {
+        let tooltip = info.details.map(d =>
+          `${d.date} - ${d.war} (${d.missed})`
+        ).join('<br>');
+
+        html += `
+          <tr>
+            <td class="player">
+              ${name}
+              <div class="tooltip">${tooltip}</div>
+            </td>
+            <td>${info.total}</td>
+          </tr>
+        `;
+      });
+
+      html += '</table>';
+    });
+
+  document.getElementById('output').innerHTML = html;
+}
+</script>
+
+</body>
+</html>
