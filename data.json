@@ -1018,5 +1018,25 @@
     "type": "Regular",
     "missed": 1,
     "enemy": "LOS BORRACHITOS"
+  },
+  {
+    "uid": "#C9VU9YU8_5647819",
+    "name": "judge johnnie",
+    "tag": "#C9VU9YU8",
+    "warId": "5647819",
+    "date": "2026-06-04T18:37:24.000Z",
+    "type": "CWL",
+    "missed": 1,
+    "enemy": "BD FIGHTERS"
+  },
+  {
+    "uid": "#2Q9LJ22J9_5647819",
+    "name": "Pikachu 2",
+    "tag": "#2Q9LJ22J9",
+    "warId": "5647819",
+    "date": "2026-06-04T18:37:24.000Z",
+    "type": "CWL",
+    "missed": 1,
+    "enemy": "BD FIGHTERS"
   }
 ]
