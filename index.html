@@ -960,6 +960,33 @@ document.addEventListener('mouseover', e => {
   }
 });
 
+  async function loadFromGitHub() {
+  try {
+    setStatus('📥 Data ophalen van GitHub...');
+    document.getElementById('statusBar').classList.add('visible');
+
+    const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${DATA_FILE}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('data.json niet gevonden op GitHub');
+
+    const data = await res.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error('Ongeldig JSON formaat');
+    }
+
+    allData = data;
+    saveData();
+    showUI();
+    render();
+
+    setStatus(`✅ GitHub geladen (${data.length} records)`);
+  } catch (err) {
+    setStatus('❌ GitHub load fout: ' + err.message);
+  }
+}
+  
 // ---- INIT ----
 if (loadData() && allData.length > 0) {
   showUI();
