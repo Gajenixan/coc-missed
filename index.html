@@ -965,6 +965,8 @@ if (loadData() && allData.length > 0) {
   showUI();
   render();
   setStatus(`✓ ${allData.length} records geladen vanuit opgeslagen data.`);
+} else {
+  loadFromGitHub();
 }
 </script>
 </body>
