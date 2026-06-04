@@ -547,6 +547,7 @@
     <div class="controls-bar">
       <button class="control-btn" onclick="exportData()">📥 Export Data</button>
       <button class="control-btn sync" onclick="syncGitHub()">☁️ Sync GitHub</button>
+      <button class="control-btn sync" id="autoSyncBtn" onclick="setupAutoSync()" title="Auto-sync bewaren voor volgende sessie">⚙️ Auto-sync instellen</button>
     </div>
 
     <div class="month-section">
@@ -646,6 +647,8 @@ function saveData() {
   try { 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allData)); 
   } catch(e) {}
+  // Auto-sync to GitHub after saving
+  autoSyncToGithub();
 }
 
 function loadData() {
@@ -653,6 +656,48 @@ function loadData() {
     const d = localStorage.getItem(STORAGE_KEY);
     if (d) { allData = JSON.parse(d); return true; }
   } catch(e) {}
+  return false;
+}
+
+async function loadDataFromGithub() {
+  try {
+    const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${DATA_FILE}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const json = await res.json();
+      console.log('✓ Data loaded from GitHub');
+      return json;
+    }
+  } catch(err) {
+    console.log('GitHub load failed, falling back to local:', err.message);
+  }
+  return null;
+}
+
+async function loadDataWithFallback() {
+  setStatus('⏳ Bezig met laden van data...');
+  document.getElementById('statusBar').classList.add('visible');
+  
+  // Try GitHub first
+  const githubData = await loadDataFromGithub();
+  if (githubData && Array.isArray(githubData)) {
+    allData = githubData;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+    showUI();
+    render();
+    setStatus('✓ Data geladen van GitHub');
+    return true;
+  }
+  
+  // Fall back to local storage
+  if (loadData()) {
+    showUI();
+    render();
+    setStatus('✓ Data geladen van lokale opslag (GitHub niet bereikbaar)');
+    return true;
+  }
+  
+  setStatus('ℹ Geen data gevonden. Upload een Excel-bestand om te beginnen.');
   return false;
 }
 
@@ -679,6 +724,10 @@ async function syncGitHub() {
     setStatus('❌ Sync geannuleerd');
     return;
   }
+  
+  // Save token for auto-sync
+  localStorage.setItem('GITHUB_TOKEN', token);
+  autoSyncToken = token;
 
   try {
     const dataStr = JSON.stringify(allData, null, 2);
@@ -719,6 +768,110 @@ async function syncGitHub() {
     }
   } catch(err) {
     setStatus('❌ Sync fout: ' + err.message);
+  }
+}
+
+// Auto-sync to GitHub (silent, without prompting for token)
+let autoSyncToken = localStorage.getItem('GITHUB_TOKEN');
+let autoSyncInProgress = false;
+
+async function autoSyncToGithub() {
+  if (!autoSyncToken || autoSyncInProgress) return;
+  
+  autoSyncInProgress = true;
+  try {
+    const dataStr = JSON.stringify(allData, null, 2);
+    const content = btoa(unescape(encodeURIComponent(dataStr)));
+
+    // Get current file sha
+    const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`;
+    const getRes = await fetch(getUrl, {
+      headers: { 'Authorization': `token ${autoSyncToken}` }
+    });
+
+    let sha = null;
+    if (getRes.ok) {
+      const json = await getRes.json();
+      sha = json.sha;
+    }
+
+    // Push update
+    const pushUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`;
+    const pushRes = await fetch(pushUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${autoSyncToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `📊 Auto-sync: ${new Date().toLocaleString('nl-NL')}`,
+        content: content,
+        sha: sha
+      })
+    });
+
+    if (pushRes.ok) {
+      console.log('✓ Auto-sync to GitHub successful');
+    } else {
+      console.log('Auto-sync failed, will retry next update');
+      autoSyncToken = null; // Reset token if invalid
+    }
+  } catch(err) {
+    console.log('Auto-sync error:', err.message);
+  } finally {
+    autoSyncInProgress = false;
+  }
+}
+
+// Setup auto-sync with GitHub token
+function setupAutoSync() {
+  const currentToken = localStorage.getItem('GITHUB_TOKEN');
+  
+  if (currentToken) {
+    const confirmed = confirm('Auto-sync is ingesteld. Wil je het token wijzigen of verwijderen?\n\n[OK] = Wijzig token\n[Annuleren] = Verwijder auto-sync');
+    if (confirmed) {
+      const newToken = prompt('🔐 Voer nieuw GitHub Personal Access Token in:\n\n(Veld leeg laten om auto-sync uit te schakelen)');
+      if (newToken === null) return;
+      
+      if (newToken.trim()) {
+        localStorage.setItem('GITHUB_TOKEN', newToken);
+        autoSyncToken = newToken;
+        setStatus('✓ Auto-sync token bijgewerkt');
+        updateAutoSyncButton();
+      } else {
+        localStorage.removeItem('GITHUB_TOKEN');
+        autoSyncToken = null;
+        setStatus('✓ Auto-sync uitgeschakeld');
+        updateAutoSyncButton();
+      }
+    } else {
+      localStorage.removeItem('GITHUB_TOKEN');
+      autoSyncToken = null;
+      setStatus('✓ Auto-sync uitgeschakeld');
+      updateAutoSyncButton();
+    }
+  } else {
+    const token = prompt('🔐 GitHub Personal Access Token (met repo permissions):\n\nOp https://github.com/settings/tokens/new aanmaken\n\n(Veld leeg laten om auto-sync uit te schakelen)');
+    if (token === null) return;
+    
+    if (token.trim()) {
+      localStorage.setItem('GITHUB_TOKEN', token);
+      autoSyncToken = token;
+      setStatus('✓ Auto-sync ingesteld! Data wordt nu automatisch gesynchroniseerd.');
+      updateAutoSyncButton();
+    }
+  }
+}
+
+// Update auto-sync button appearance
+function updateAutoSyncButton() {
+  const btn = document.getElementById('autoSyncBtn');
+  if (localStorage.getItem('GITHUB_TOKEN')) {
+    btn.style.opacity = '1';
+    btn.title = 'Auto-sync actief - klik om token te beheren';
+  } else {
+    btn.style.opacity = '0.5';
+    btn.title = 'Auto-sync inactief - klik om in te stellen';
   }
 }
 
@@ -893,6 +1046,7 @@ function setMonth(m) {
 function showUI() {
   document.getElementById('mainContent').style.display = 'block';
   document.getElementById('statusBar').classList.add('visible');
+  updateAutoSyncButton();
 }
 
 function setStatus(text) {
@@ -960,41 +1114,13 @@ document.addEventListener('mouseover', e => {
   }
 });
 
-  async function loadFromGitHub() {
-  try {
-    setStatus('📥 Data ophalen van GitHub...');
-    document.getElementById('statusBar').classList.add('visible');
-
-    const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${DATA_FILE}`;
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('data.json niet gevonden op GitHub');
-
-    const data = await res.json();
-
-    if (!Array.isArray(data)) {
-      throw new Error('Ongeldig JSON formaat');
-    }
-
-    allData = data;
-    saveData();
-    showUI();
-    render();
-
-    setStatus(`✅ GitHub geladen (${data.length} records)`);
-  } catch (err) {
-    setStatus('❌ GitHub load fout: ' + err.message);
-  }
-}
-  
 // ---- INIT ----
-if (loadData() && allData.length > 0) {
-  showUI();
-  render();
-  setStatus(`✓ ${allData.length} records geladen vanuit opgeslagen data.`);
-} else {
-  loadFromGitHub();
-}
+// Load data from GitHub first, then fall back to local storage
+loadDataWithFallback().then(success => {
+  if (success && allData.length > 0) {
+    // Data loaded successfully
+  }
+});
 </script>
 </body>
 </html>
