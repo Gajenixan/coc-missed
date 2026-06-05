@@ -3,909 +3,1084 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚔️ Missed Attacks — het is war! ☠</title>
+<title>CoC Missed Attacks Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0c10;
-    --panel: #111418;
-    --border: #1e2530;
-    --accent: #e8a020;
-    --accent2: #c0392b;
-    --gold: #f0c040;
-    --silver: #9ab0c8;
-    --bronze: #cd7f32;
-    --text: #d0d8e4;
-    --muted: #556070;
-    --cwl: #3b82f6;
-    --regular: #10b981;
-    --glow: rgba(232,160,32,0.15);
-  }
+*{box-sizing:border-box;margin:0;padding:0}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold: #f5c842;
+  --gold-dark: #c8960c;
+  --gold-light: #fde87a;
+  --brown-dark: #2a1a05;
+  --brown-mid: #4a2e0a;
+  --brown-light: #6b4218;
+  --stone: #3d3028;
+  --stone-light: #5a4a3a;
+  --stone-lighter: #7a6a5a;
+  --red: #c0392b;
+  --red-bright: #e74c3c;
+  --blue: #2471a3;
+  --blue-bright: #3498db;
+  --green: #1e8449;
+  --green-bright: #27ae60;
+  --cream: #f5e6c8;
+  --cream-dim: #c8b090;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 16px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+body {
+  font-family: 'Cinzel', Georgia, serif;
+  background-color: #1a1008;
+  background-image:
+    radial-gradient(ellipse at top, #2d1a04 0%, #1a1008 60%),
+    url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='80' height='80' fill='none'/%3E%3Crect x='0' y='0' width='40' height='40' fill='rgba(255,255,255,0.008)'/%3E%3Crect x='40' y='40' width='40' height='40' fill='rgba(255,255,255,0.008)'/%3E%3Crect x='1' y='1' width='38' height='38' fill='none' stroke='rgba(200,150,12,0.04)' stroke-width='1'/%3E%3C/svg%3E");
+  color: var(--cream);
+  min-height: 100vh;
+  padding: 28px 20px 40px;
+}
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: 
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(232,160,32,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 30% at 80% 80%, rgba(192,57,43,0.06) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
+/* ===== HEADER ===== */
+.header {
+  text-align: center;
+  margin-bottom: 28px;
+  position: relative;
+}
 
-  .container { max-width: 960px; margin: 0 auto; padding: 0 24px 60px; position: relative; z-index: 1; }
+.header-banner {
+  display: inline-block;
+  position: relative;
+  padding: 14px 60px 10px;
+  background: linear-gradient(180deg, #7a4f10 0%, #4a2e0a 40%, #3a2208 100%);
+  border: 3px solid var(--gold-dark);
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 1px #8a6020,
+    0 6px 30px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,220,100,0.3),
+    inset 0 -2px 0 rgba(0,0,0,0.4);
+}
 
-  /* HEADER */
-  header {
-    text-align: center;
-    padding: 48px 0 36px;
-    position: relative;
-  }
-  header::after {
-    content: '';
-    display: block;
-    width: 200px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    margin: 24px auto 0;
-  }
+.header-banner::before, .header-banner::after {
+  content: '⚔';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+.header-banner::before { left: 16px; }
+.header-banner::after  { right: 16px; transform: translateY(-50%) scaleX(-1); }
 
-  .clan-name {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(13px, 3vw, 18px);
-    color: var(--accent);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    opacity: 0.85;
-  }
-  h1 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(22px, 5vw, 40px);
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 0 0 40px rgba(232,160,32,0.4);
-    line-height: 1.1;
-  }
-  h1 span { color: var(--accent); }
-  .subtitle {
-    margin-top: 10px;
-    color: var(--muted);
-    font-size: 15px;
-    letter-spacing: 1px;
-  }
+h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--gold-light);
+  text-shadow:
+    0 2px 4px rgba(0,0,0,0.9),
+    0 0 20px rgba(245,200,66,0.4);
+  letter-spacing: 2px;
+  line-height: 1.2;
+}
 
-  /* UPLOAD ZONE */
-  .upload-zone {
-    border: 2px dashed var(--border);
-    border-radius: 12px;
-    padding: 32px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.25s;
-    background: var(--panel);
-    margin-bottom: 32px;
-    position: relative;
-    overflow: hidden;
-  }
-  .upload-zone:hover, .upload-zone.drag-over {
-    border-color: var(--accent);
-    background: rgba(232,160,32,0.05);
-    box-shadow: 0 0 30px rgba(232,160,32,0.1);
-  }
-  .upload-icon {
-    font-size: 36px;
-    margin-bottom: 10px;
-    display: block;
-  }
-  .upload-label {
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 4px;
-  }
-  .upload-hint {
-    font-size: 13px;
-    color: var(--muted);
-  }
-  #fileInput { display: none; }
+.subtitle {
+  font-size: 12px;
+  color: var(--cream-dim);
+  margin-top: 5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 400;
+}
 
-  /* PASSWORD MODAL */
-  .password-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-  }
-  .password-modal.show { display: flex; }
-  .password-content {
-    background: var(--panel);
-    border: 2px solid var(--accent);
-    border-radius: 12px;
-    padding: 32px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 0 40px rgba(232,160,32,0.2);
-  }
-  .password-title {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 20px;
-    color: var(--accent);
-    margin-bottom: 16px;
-    text-align: center;
-  }
-  .password-input {
-    width: 100%;
-    padding: 12px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-size: 16px;
-    margin-bottom: 16px;
-    font-family: 'Rajdhani', sans-serif;
-  }
-  .password-input:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 10px rgba(232,160,32,0.2);
-  }
-  .password-buttons {
-    display: flex;
-    gap: 12px;
-  }
-  .password-btn {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--panel);
-    color: var(--text);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'Rajdhani', sans-serif;
-  }
-  .password-btn.submit {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #fff;
-    border-color: var(--accent);
-  }
-  .password-btn:hover {
-    border-color: var(--accent);
-  }
+/* ===== DIVIDER ===== */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+.divider-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+}
+.divider-gem {
+  width: 10px;
+  height: 10px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 6px rgba(245,200,66,0.5);
+}
 
-  /* STATUS BAR */
-  .status-bar {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 20px;
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    color: var(--muted);
-    display: none;
-  }
-  .status-bar.visible { display: flex; }
-  .status-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    flex-shrink: 0;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+/* ===== DROP ZONE ===== */
+.drop-zone {
+  border: 2px dashed var(--gold-dark);
+  border-radius: 6px;
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .25s;
+  margin-bottom: 24px;
+  background: linear-gradient(180deg, rgba(74,46,10,0.5) 0%, rgba(42,26,5,0.6) 100%);
+  box-shadow: inset 0 2px 12px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
+  position: relative;
+  overflow: hidden;
+}
+.drop-zone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1' fill='rgba(245,200,66,0.06)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.drop-zone.drag-over {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(100,70,10,0.6) 0%, rgba(60,36,5,0.7) 100%);
+  box-shadow: inset 0 2px 12px rgba(0,0,0,0.4), 0 0 20px rgba(245,200,66,0.2);
+}
+.drop-zone input[type=file]{display:none}
 
-  /* CONTROLS */
-  .controls-bar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .control-btn {
-    padding: 10px 16px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--muted);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'Rajdhani', sans-serif;
-  }
-  .control-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+.drop-icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+}
 
+.drop-zone strong {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold-light);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  margin-bottom: 6px;
+}
+.drop-zone p {
+  font-family: 'Cinzel', serif;
+  color: var(--cream-dim);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
 
-  /* MONTH TABS */
-  .month-section { margin-bottom: 32px; }
-  .month-section-title {
-    font-size: 12px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-    padding-left: 4px;
-  }
-  .month-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .month-btn {
-    padding: 9px 20px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--panel);
-    color: var(--muted);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-  }
-  .month-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .month-btn span { position: relative; z-index: 1; }
-  .month-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .month-btn.active {
-    border-color: var(--accent);
-    color: #fff;
-    box-shadow: 0 0 20px rgba(232,160,32,0.2);
-  }
-  .month-btn.active::before { opacity: 1; }
-  .month-btn .count-badge {
-    display: inline-block;
-    background: rgba(255,255,255,0.15);
-    border-radius: 3px;
-    padding: 1px 6px;
-    font-size: 11px;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
+/* ===== STATS ROW ===== */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
 
-  /* ALL BUTTON */
-  .month-btn.all-btn {
-    border-color: var(--muted);
-  }
+.stat {
+  background: linear-gradient(180deg, #5a3a10 0%, #3a2208 60%, #2a1a05 100%);
+  border: 2px solid var(--gold-dark);
+  border-radius: 6px;
+  padding: 14px 16px;
+  text-align: center;
+  position: relative;
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,220,100,0.2),
+    inset 0 -1px 0 rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+.stat::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,220,100,0.5), transparent);
+}
 
-  /* STATS */
-  #statsRow {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 32px;
-    flex-wrap: wrap;
-  }
-  .stat-card {
-    flex: 1;
-    min-width: 140px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-  }
-  .stat-num {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 28px;
-    color: var(--accent);
-    font-weight: 900;
-  }
-  .stat-label {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 8px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
+.stat-icon {
+  font-size: 22px;
+  display: block;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
 
-  /* RANKING TABLE */
-  .ranking-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .ranking-title {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 16px;
-    color: var(--accent);
-  }
-  .ranking-period {
-    font-size: 13px;
-    color: var(--muted);
-  }
+.stat-label {
+  font-size: 10px;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
 
-  .ranking-table {
-    width: 100%;
-    border-collapse: collapse;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 30px rgba(0,0,0,0.4);
-  }
-  .ranking-table thead tr {
-    background: linear-gradient(135deg, #161b22, #1a2030);
-    border-bottom: 1px solid var(--accent);
-  }
-  .ranking-table th {
-    padding: 14px 16px;
-    text-align: left;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .ranking-table th:last-child { text-align: right; }
+.stat-value {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--cream);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+}
+.stat-value.red {
+  color: #ff6b5b;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8), 0 0 12px rgba(192,57,43,0.5);
+}
+.stat-value.amber {
+  color: var(--gold-light);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8), 0 0 12px rgba(245,200,66,0.4);
+  font-size: 16px;
+}
 
-  .ranking-table tbody tr {
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-    cursor: default;
-    animation: rowIn 0.3s ease backwards;
-  }
-  @keyframes rowIn {
-    from { opacity: 0; transform: translateX(-8px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-  .ranking-table tbody tr:hover {
-    background: rgba(255,255,255,0.04);
-  }
-  .ranking-table tbody tr:last-child { border-bottom: none; }
+/* ===== TABS ===== */
+.section-label {
+  font-size: 11px;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
 
-  .ranking-table td {
-    padding: 14px 16px;
-    font-size: 15px;
-    vertical-align: middle;
-  }
-  .ranking-table td:last-child { text-align: right; }
+.month-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
 
-  /* RANK CELL */
-  .rank-cell {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 15px;
-    font-weight: 700;
-    width: 50px;
-  }
-  .rank-1 { color: var(--gold); text-shadow: 0 0 10px rgba(240,192,64,0.5); }
-  .rank-2 { color: var(--silver); text-shadow: 0 0 10px rgba(154,176,200,0.3); }
-  .rank-3 { color: var(--bronze); text-shadow: 0 0 8px rgba(205,127,50,0.3); }
-  .rank-other { color: var(--muted); }
+.tab {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--brown-light);
+  background: linear-gradient(180deg, #4a3010 0%, #2a1a05 100%);
+  color: var(--cream-dim);
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all .2s;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.tab:hover {
+  border-color: var(--gold-dark);
+  color: var(--gold-light);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5), 0 0 8px rgba(245,200,66,0.15);
+}
+.tab.active {
+  background: linear-gradient(180deg, #c8960c 0%, #8a6010 50%, #5a3a08 100%);
+  border-color: var(--gold-light);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5), 0 0 10px rgba(245,200,66,0.2), inset 0 1px 0 rgba(255,255,255,0.2);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
 
-  /* BARS & NUMBERS */
-  .missed-bar-cell { width: 40%; }
-  .missed-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .bar-track {
-    flex: 1;
-    height: 6px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    border-radius: 3px;
-    transition: width 0.3s ease;
-  }
-  .bar-num {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 15px;
-    color: var(--accent);
-    font-weight: 700;
-    min-width: 35px;
-    text-align: right;
-  }
+/* ===== FILTER ROW ===== */
+.filter-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+.filter-label {
+  font-size: 11px;
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  margin-right: 4px;
+}
+.filter-btn {
+  padding: 5px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--brown-light);
+  background: linear-gradient(180deg, #4a3010 0%, #2a1a05 100%);
+  color: var(--cream-dim);
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all .2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+.filter-btn:hover, .filter-btn.active {
+  color: var(--cream);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.filter-btn.active {
+  background: linear-gradient(180deg, #5a3a10 0%, #3a2208 100%);
+  border-color: var(--gold-dark);
+  color: var(--gold-light);
+}
+.filter-btn.cwl.active {
+  background: linear-gradient(180deg, #1a3a6a 0%, #0e2245 100%);
+  border-color: #3b7dd8;
+  color: #74b3f7;
+}
+.filter-btn.reg.active {
+  background: linear-gradient(180deg, #1a4a1a 0%, #0e2e0e 100%);
+  border-color: #3a8a3a;
+  color: #74d474;
+}
 
-  /* TOOLTIP */
-  .tooltip-wrapper { position: relative; }
-  .tooltip-trigger { cursor: help; border-bottom: 1px dotted var(--accent); }
-  .tooltip-trigger:hover { color: var(--accent); }
-  .tooltip-box {
-    display: none;
-    position: fixed;
-    background: var(--panel);
-    border: 1px solid var(--accent);
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 12px;
-    width: 320px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-    z-index: 999;
-    pointer-events: none;
-  }
-  .tooltip-trigger:hover ~ .tooltip-box,
-  .tooltip-box:hover { display: block; }
-  .tooltip-title {
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-  }
-  .tooltip-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 6px;
-    padding: 4px 0;
-  }
-  .tooltip-date {
-    color: var(--muted);
-    min-width: 70px;
-  }
-  .war-badge {
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .war-cwl { background: rgba(59,130,246,0.3); color: var(--cwl); }
-  .war-regular { background: rgba(16,185,129,0.3); color: var(--regular); }
-  .tooltip-enemy {
-    flex: 1;
-    color: var(--text);
-  }
-  .missed-x {
-    color: var(--accent2);
-    font-weight: 700;
-  }
+/* ===== TABLE ===== */
+.table-wrap {
+  background: linear-gradient(180deg, #2a1a06 0%, #1e1204 100%);
+  border: 2px solid var(--gold-dark);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,220,100,0.1);
+}
 
-  /* EMPTY STATE */
-  #emptyState {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--muted);
-  }
-  #emptyState p { margin-bottom: 12px; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-  /* RESPONSIVE */
-  @media (max-width: 640px) {
-    .rank-cell { font-size: 13px; }
-    .bar-num { font-size: 13px; }
-    .ranking-table td { padding: 10px 8px; font-size: 13px; }
-    .tooltip-box { width: 250px; font-size: 11px; }
-  }
+thead {
+  background: linear-gradient(180deg, #6b4218 0%, #4a2e0a 100%);
+  border-bottom: 2px solid var(--gold-dark);
+}
+thead tr::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,220,100,0.3), transparent);
+}
+
+th {
+  padding: 12px 14px;
+  text-align: left;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+tbody tr {
+  border-bottom: 1px solid rgba(100,70,20,0.3);
+  transition: background .15s;
+}
+tbody tr:hover {
+  background: rgba(100,70,20,0.2);
+}
+tbody tr:nth-child(odd) {
+  background: rgba(0,0,0,0.15);
+}
+tbody tr:nth-child(odd):hover {
+  background: rgba(100,70,20,0.25);
+}
+
+td {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--cream);
+}
+
+/* ===== RANK ===== */
+.rank {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 12px;
+  color: var(--gold-dark);
+  width: 36px;
+  text-align: center;
+}
+tr:nth-child(1) .rank { color: #FFD700; font-size: 15px; }
+tr:nth-child(2) .rank { color: #C0C0C0; font-size: 14px; }
+tr:nth-child(3) .rank { color: #CD7F32; font-size: 13px; }
+
+.rank-medal {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  line-height: 26px;
+  text-align: center;
+  border-radius: 50%;
+  font-size: 13px;
+}
+tr:nth-child(1) .rank-medal { background: radial-gradient(circle, #ffe566, #c8960c); box-shadow: 0 0 8px rgba(255,210,0,0.4); }
+tr:nth-child(2) .rank-medal { background: radial-gradient(circle, #e8e8e8, #888); box-shadow: 0 0 6px rgba(200,200,200,0.3); }
+tr:nth-child(3) .rank-medal { background: radial-gradient(circle, #e8a060, #8b4513); box-shadow: 0 0 6px rgba(205,127,50,0.3); }
+
+/* ===== PLAYER NAME ===== */
+.player-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--cream);
+  font-weight: 600;
+  cursor: default;
+  letter-spacing: 0.5px;
+}
+
+/* ===== BADGES ===== */
+.war-badge {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.badge-cwl {
+  background: linear-gradient(180deg, #1a3a6a, #0e2245);
+  border: 1px solid #3b7dd8;
+  color: #74b3f7;
+}
+.badge-reg {
+  background: linear-gradient(180deg, #1a4a1a, #0e2e0e);
+  border: 1px solid #3a8a3a;
+  color: #74d474;
+}
+.badge-both {
+  background: linear-gradient(180deg, #4a3a10, #2a2008);
+  border: 1px solid var(--gold-dark);
+  color: var(--gold-light);
+}
+
+/* ===== MISS BAR ===== */
+.miss-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.miss-num {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ff6b5b;
+  min-width: 20px;
+  text-shadow: 0 0 8px rgba(231,76,60,0.5);
+}
+.miss-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(100,70,20,0.4);
+  flex: 1;
+  overflow: hidden;
+}
+.miss-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #c0392b, #e74c3c, #ff6b5b);
+  box-shadow: 0 0 6px rgba(231,76,60,0.4);
+  transition: width .4s ease;
+}
+.miss-sub {
+  font-size: 11px;
+  color: var(--stone-lighter);
+  font-family: 'Cinzel', serif;
+}
+
+/* ===== TOOLTIP ===== */
+.tooltip {
+  position: fixed;
+  background: linear-gradient(180deg, #5a3a10 0%, #2a1a05 100%);
+  border: 2px solid var(--gold-dark);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 9999;
+  min-width: 190px;
+  max-width: 280px;
+  display: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.8), 0 0 12px rgba(200,150,12,0.15);
+}
+.tooltip-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--gold-light);
+  margin-bottom: 10px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  border-bottom: 1px solid rgba(200,150,12,0.3);
+  padding-bottom: 6px;
+}
+.tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(100,70,20,0.3);
+  color: var(--cream-dim);
+  font-family: 'Cinzel', serif;
+}
+.tooltip-row:last-child { border: none; }
+.tooltip-date { color: var(--stone-lighter); font-size: 11px; }
+.tooltip-type {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.tt-cwl { background: #1e3a5f; border: 1px solid #3b7dd8; color: #74b3f7; }
+.tt-reg { background: #1e3a1e; border: 1px solid #3a8a3a; color: #74d474; }
+.tooltip-miss { color: #ff6b5b; font-weight: 700; font-size: 12px; }
+
+/* ===== STATUS BAR ===== */
+.status-bar {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--stone-lighter);
+  margin-top: 8px;
+  min-height: 18px;
+  letter-spacing: 0.5px;
+}
+.status-ok { color: #74d474; }
+.status-err { color: #ff6b5b; }
+
+/* ===== EMPTY ===== */
+.empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--stone-lighter);
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+/* ===== SHIELD DECORATION ===== */
+.page-deco {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(200,150,12,0.3);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 28px;
+  font-family: 'Cinzel', serif;
+}
+
+@media(max-width:600px){
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .stat-value { font-size: 18px; }
+  h1 { font-size: 16px; }
+  .header-banner { padding: 12px 44px 8px; }
+  .header-banner::before { left: 10px; }
+  .header-banner::after  { right: 10px; }
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <div class="clan-name">🔥 Data Tracker 🔥</div>
-    <h1>Gemiste <span>Aanvallen</span></h1>
-    <p class="subtitle">Verzamelen, analyseren, verslaan</p>
-  </header>
 
-  <div id="uploadZone" class="upload-zone">
-    <span class="upload-icon">📊</span>
-    <div class="upload-label">Upload Excel bestand</div>
-    <div class="upload-hint">Sleep hier een .xlsx bestand, of klik om te selecteren</div>
-    <input type="file" id="fileInput" accept=".xlsx,.xls" />
-  </div>
-
-  <div id="passwordModal" class="password-modal">
-    <div class="password-content">
-      <div class="password-title">🔐 Wachtwoord vereist</div>
-      <input type="password" id="passwordInput" class="password-input" placeholder="Voer wachtwoord in..." />
-      <div class="password-buttons">
-        <button class="password-btn" onclick="cancelPassword()">Annuleren</button>
-        <button class="password-btn submit" onclick="checkPassword()">Bevestigen</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="statusBar" class="status-bar">
-    <span class="status-dot"></span>
-    <span id="statusText">Status...</span>
-  </div>
-
-  <div id="mainContent" style="display: none;">
-    <div class="controls-bar">
-      <button class="control-btn" onclick="exportData()">📥 Export Data</button>
-    </div>
-
-    <div class="month-section">
-      <div class="month-section-title">Periode</div>
-      <div id="monthTabs" class="month-tabs"></div>
-    </div>
-
-    <div id="statsRow"></div>
-
-    <div class="ranking-header">
-      <span class="ranking-title">⚔️ GEMISTE AANVALLEN RANKING</span>
-      <span class="ranking-period" id="rankingPeriod"></span>
-    </div>
-
-    <table class="ranking-table">
-      <thead>
-        <tr>
-          <th style="width: 50px;">#</th>
-          <th style="flex: 1;">Speler</th>
-          <th style="width: 40%;">Voortgang</th>
-          <th style="width: 50px;">Totaal</th>
-        </tr>
-      </thead>
-      <tbody id="rankingBody"></tbody>
-    </table>
-
-    <div id="emptyState" style="display: none;">
-      <p>Geen data beschikbaar</p>
-      <p style="font-size: 13px; color: var(--muted);">Upload een Excel bestand om te beginnen</p>
-    </div>
+<div class="header">
+  <div class="header-banner">
+    <h1>Missed Attacks Tracker</h1>
+    <p class="subtitle">Clan War Performance • Sleep je Excel bestand hierin</p>
   </div>
 </div>
 
+<div class="divider">
+  <div class="divider-line"></div>
+  <div class="divider-gem"></div>
+  <div class="divider-line"></div>
+</div>
+
+<div class="drop-zone" id="dropZone">
+  <input type="file" id="fileInput" accept=".xlsx,.xls">
+  <span class="drop-icon">🛡️</span>
+  <strong>Sleep een Excel bestand hierin</strong>
+  <p style="margin-top:4px">of klik om te bladeren &nbsp;·&nbsp; Ondersteunt: <em>Naam / Name &nbsp;·&nbsp; Datum / Ended &nbsp;·&nbsp; War Type &nbsp;·&nbsp; Gemiste Aanvallen / Missed</em></p>
+  <p class="status-bar" id="statusBar"></p>
+</div>
+
+<div class="stats-row" id="statsRow">
+  <div class="stat">
+    <span class="stat-icon">💀</span>
+    <div class="stat-label">Totaal gemist</div>
+    <div class="stat-value red" id="sTotaal">—</div>
+  </div>
+  <div class="stat">
+    <span class="stat-icon">⚔️</span>
+    <div class="stat-label">Unieke spelers</div>
+    <div class="stat-value" id="sSpelers">—</div>
+  </div>
+  <div class="stat">
+    <span class="stat-icon">🏆</span>
+    <div class="stat-label">Meeste misser</div>
+    <div class="stat-value amber" id="sBeste" style="font-size:16px">—</div>
+  </div>
+  <div class="stat">
+    <span class="stat-icon">📅</span>
+    <div class="stat-label">Actieve maanden</div>
+    <div class="stat-value" id="sMaanden">—</div>
+  </div>
+</div>
+
+<div class="divider">
+  <div class="divider-line"></div>
+  <div class="divider-gem"></div>
+  <div class="divider-line"></div>
+</div>
+
+<div class="section-label">Maand</div>
+<div class="month-tabs" id="monthTabs"></div>
+
+<div class="filter-row">
+  <span class="filter-label">Type:</span>
+  <button class="filter-btn active" id="fAll" onclick="setFilter('all')">Alle</button>
+  <button class="filter-btn cwl" id="fCwl" onclick="setFilter('CWL')">CWL</button>
+  <button class="filter-btn reg" id="fReg" onclick="setFilter('Regular')">Regular</button>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:46px">#</th>
+        <th>Speler</th>
+        <th style="width:110px">Type</th>
+        <th style="width:230px">Gemiste aanvallen</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="empty" id="emptyMsg" style="display:none">⚔️ Geen data voor deze maand / filter</div>
+</div>
+
+<div class="page-deco">⚔ &nbsp; Clash of Clans War Tracker &nbsp; ⚔</div>
+
+<div class="tooltip" id="tooltip"></div>
+
 <script>
-const STORAGE_KEY = 'coc_missed_attacks_data';
-const CORRECT_PASSWORD = 'Ghs@nd0kan';
+const STORAGE_KEY = 'coc_missed_attacks_v2';
 
-let allData = [];
-let activeMonth = 'ALL';
-let pendingFile = null;
+let allData = loadData();
+let currentMonth = null;
+let currentFilter = 'all';
 
-// ---- PASSWORD PROTECTION ----
-function showPasswordModal(file) {
-  pendingFile = file;
-  document.getElementById('passwordModal').classList.add('show');
-  document.getElementById('passwordInput').value = '';
-  document.getElementById('passwordInput').focus();
+function loadData(){
+  try{
+    const s = localStorage.getItem(STORAGE_KEY);
+    return s ? JSON.parse(s) : getSeedData();
+  }catch(e){ return getSeedData(); }
 }
 
-function checkPassword() {
-  const password = document.getElementById('passwordInput').value;
-  if (password === CORRECT_PASSWORD) {
-    document.getElementById('passwordModal').classList.remove('show');
-    handleFile(pendingFile);
-    pendingFile = null;
-  } else {
-    alert('❌ Incorrect wachtwoord');
-    document.getElementById('passwordInput').value = '';
-    document.getElementById('passwordInput').focus();
-  }
+function saveData(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
 }
 
-function cancelPassword() {
-  document.getElementById('passwordModal').classList.remove('show');
-  pendingFile = null;
+function getSeedData(){
+  return [
+  {"naam":"Very Important","tag":"#YLVRVPU2","datum":"22-04-2026","war_type":"Regular","gemist":1},
+  {"naam":"jobapache","tag":"#2YYGU200Q","datum":"22-04-2026","war_type":"Regular","gemist":2},
+  {"naam":"lennardtc","tag":"#88RVU9PVU","datum":"22-04-2026","war_type":"Regular","gemist":2},
+  {"naam":"00:00:01","tag":"#L0JYC20VG","datum":"19-04-2026","war_type":"Regular","gemist":1},
+  {"naam":"mitch","tag":"#PQ28R9RY","datum":"19-04-2026","war_type":"Regular","gemist":2},
+  {"naam":"Donovanbock","tag":"#Q2QRUJYU","datum":"19-04-2026","war_type":"Regular","gemist":1},
+  {"naam":"JanPaul","tag":"#8LYLRLVG","datum":"19-04-2026","war_type":"Regular","gemist":2},
+  {"naam":"ricardo","tag":"#J8PRVVQQ","datum":"19-04-2026","war_type":"Regular","gemist":2},
+  {"naam":"Susdu","tag":"#Y22JRYJ0U","datum":"16-04-2026","war_type":"Regular","gemist":2},
+  {"naam":"_*.TDV8.*_","tag":"#V008U8L","datum":"13-04-2026","war_type":"Regular","gemist":1},
+  {"naam":"GwnJohny","tag":"#2LJCCJ8Q","datum":"13-04-2026","war_type":"Regular","gemist":1},
+  {"naam":"best player","tag":"#9R2L2902P","datum":"13-04-2026","war_type":"Regular","gemist":1},
+  {"naam":"Eindbaas Guido","tag":"#8QL2UVQR","datum":"10-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"lennardtc","tag":"#88RVU9PVU","datum":"10-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"Beau","tag":"#2GQR9QQ8C","datum":"10-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"Clash-Destroyer","tag":"#2PC9QRJ9V","datum":"09-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"Beau","tag":"#2GQR9QQ8C","datum":"09-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"Beau","tag":"#2GQR9QQ8C","datum":"08-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"_*.TDV8.*_","tag":"#V008U8L","datum":"07-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"Beau","tag":"#2GQR9QQ8C","datum":"06-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"-FrankenStijn-","tag":"#Q9PU80JY2","datum":"05-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"Clash-Destroyer","tag":"#2PC9QRJ9V","datum":"05-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"Jesse","tag":"#QJQG20C89","datum":"05-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"jobapache","tag":"#2YYGU200Q","datum":"04-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"Beau","tag":"#2GQR9QQ8C","datum":"04-04-2026","war_type":"CWL","gemist":1},
+  {"naam":"Clash-Destroyer","tag":"#2PC9QRJ9V","datum":"30-03-2026","war_type":"Regular","gemist":1},
+  {"naam":"Ekanshhh","tag":"#PL89G0YUL","datum":"30-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"mitch","tag":"#PQ28R9RY","datum":"30-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"jobapache","tag":"#2YYGU200Q","datum":"27-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"KING","tag":"#8QLLQC99","datum":"17-03-2026","war_type":"Regular","gemist":1},
+  {"naam":"MrMaarten","tag":"#PL8R2C20","datum":"17-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"Donovanbock","tag":"#Q2QRUJYU","datum":"17-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"JanPaul","tag":"#8LYLRLVG","datum":"17-03-2026","war_type":"Regular","gemist":1},
+  {"naam":"Eindbaas Guido","tag":"#8QL2UVQR","datum":"15-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"jelmar123456","tag":"#GV89JURJ","datum":"15-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"pcal","tag":"#2CRP28GU","datum":"15-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"Donovanbock","tag":"#Q2QRUJYU","datum":"15-03-2026","war_type":"Regular","gemist":1},
+  {"naam":"OngewassenDraak","tag":"#C0UUR9R0","datum":"15-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"OngewassenDraak","tag":"#C0UUR9R0","datum":"13-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"Jesse","tag":"#QJQG20C89","datum":"13-03-2026","war_type":"Regular","gemist":2},
+  {"naam":"kim","tag":"#L9VQ8YYY","datum":"09-03-2026","war_type":"CWL","gemist":1},
+  {"naam":"_*.TDV8.*_","tag":"#V008U8L","datum":"08-03-2026","war_type":"CWL","gemist":1},
+  {"naam":"Beau","tag":"#2GQR9QQ8C","datum":"08-03-2026","war_type":"CWL","gemist":1},
+  {"naam":"generaal ZX","tag":"#PU2822YVR","datum":"07-03-2026","war_type":"CWL","gemist":1},
+  {"naam":"Jesse","tag":"#QJQG20C89","datum":"05-03-2026","war_type":"CWL","gemist":1},
+  {"naam":"OngewassenDraak","tag":"#C0UUR9R0","datum":"01-03-2026","war_type":"Regular","gemist":1},
+  {"naam":"Eindbaas Guido","tag":"#8QL2UVQR","datum":"27-02-2026","war_type":"Regular","gemist":2},
+  {"naam":"SANDER","tag":"#YQL0QQ98","datum":"27-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"_*.TDV8.*_","tag":"#V008U8L","datum":"25-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"OngewassenDraak","tag":"#C0UUR9R0","datum":"25-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"OngewassenDraak","tag":"#C0UUR9R0","datum":"23-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"Marc'O mc Val*","tag":"#2PYPY8VJ","datum":"19-02-2026","war_type":"Regular","gemist":2},
+  {"naam":"lennardtc","tag":"#88RVU9PVU","datum":"19-02-2026","war_type":"Regular","gemist":2},
+  {"naam":"Beau","tag":"#2GQR9QQ8C","datum":"17-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"VANPANHUISELVIS","tag":"#2L8P2RC20","datum":"17-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"_*.TDV8.*_","tag":"#V008U8L","datum":"17-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"mil0z","tag":"#JRJ8GG0","datum":"17-02-2026","war_type":"Regular","gemist":2},
+  {"naam":"Donovanbock","tag":"#Q2QRUJYU","datum":"15-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"JanPaul","tag":"#8LYLRLVG","datum":"15-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"Marc'O mc Val*","tag":"#2PYPY8VJ","datum":"13-02-2026","war_type":"Regular","gemist":2},
+  {"naam":"niels","tag":"#Q82RUY9P","datum":"13-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"jelmar123456","tag":"#GV89JURJ","datum":"13-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"robin","tag":"#L9PC8VGQP","datum":"13-02-2026","war_type":"Regular","gemist":2},
+  {"naam":"GwnJohny","tag":"#2LJCCJ8Q","datum":"13-02-2026","war_type":"Regular","gemist":1},
+  {"naam":"TyrakX","tag":"#YRRVQYV8","datum":"10-02-2026","war_type":"CWL","gemist":1},
+  {"naam":"Clash-Destroyer","tag":"#2PC9QRJ9V","datum":"30-01-2026","war_type":"Regular","gemist":2},
+  {"naam":"_*.TDV8.*_","tag":"#V008U8L","datum":"30-01-2026","war_type":"Regular","gemist":2},
+  {"naam":"JanPaul","tag":"#8LYLRLVG","datum":"28-01-2026","war_type":"Regular","gemist":1},
+  {"naam":"Aesir","tag":"#Q2JUG02LR","datum":"28-01-2026","war_type":"Regular","gemist":1},
+  {"naam":"Nozzie","tag":"#LUJ8CGYR","datum":"28-01-2026","war_type":"Regular","gemist":1},
+  {"naam":"Black Wizard","tag":"#C0UUR9R0","datum":"26-01-2026","war_type":"Regular","gemist":2},
+  {"naam":"VANPANHUISELVIS","tag":"#2L8P2RC20","datum":"24-01-2026","war_type":"Regular","gemist":1},
+  {"naam":"SANDER","tag":"#YQL0QQ98","datum":"24-01-2026","war_type":"Regular","gemist":1},
+  {"naam":"Clash-Destroyer","tag":"#2PC9QRJ9V","datum":"24-01-2026","war_type":"Regular","gemist":1},
+  {"naam":"Aesir","tag":"#Q2JUG02LR","datum":"22-01-2026","war_type":"Regular","gemist":1}
+  ];
 }
 
-document.getElementById('passwordInput')?.addEventListener('keypress', e => {
-  if (e.key === 'Enter') checkPassword();
-  if (e.key === 'Escape') cancelPassword();
-});
-
-// ---- UTILITIES ----
-function excelDateToDate(serial) {
-  const base = new Date(1899, 11, 30);
-  return new Date(base.getTime() + serial * 86400000);
+function parseDate(d){
+  if(!d) return null;
+  const s = String(d).trim();
+  const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if(m) return new Date(+m[3], +m[2]-1, +m[1]);
+  const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m2) return new Date(+m2[1], +m2[2]-1, +m2[3]);
+  const dt = new Date(s);
+  return isNaN(dt) ? null : dt;
 }
 
-function formatDate(d) {
-  return d.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+function getMonthKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+
+function getMonthLabel(key){
+  const [y,m] = key.split('-');
+  return new Date(+y,+m-1,1).toLocaleDateString('nl-NL',{month:'long',year:'numeric'});
 }
 
-function monthKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+function getMonths(){
+  const set = new Set();
+  allData.forEach(r => {
+    const d = parseDate(r.datum);
+    if(d) set.add(getMonthKey(d));
+  });
+  return Array.from(set).sort().reverse();
 }
 
-function monthLabel(key) {
-  const [y, m] = key.split('-');
-  const names = ['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
-  return `${names[parseInt(m)-1]} ${y}`;
+function buildRowKey(r){ return `${r.naam}||${r.datum}||${r.war_type}||${r.gemist}`; }
+
+function mergeNewData(newRows){
+  const existing = new Set(allData.map(buildRowKey));
+  let added = 0;
+  newRows.forEach(r => {
+    const k = buildRowKey(r);
+    if(!existing.has(k)){
+      allData.push(r);
+      existing.add(k);
+      added++;
+    }
+  });
+  return added;
 }
 
-// ---- DATA STORAGE ----
-function saveData() {
-  try { 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allData)); 
-  } catch(e) {}
+function xlsxSerialToDate(serial){
+  const d = new Date(Math.round((serial - 25569) * 86400 * 1000));
+  const utc = new Date(d.getTime() + d.getTimezoneOffset() * 60000);
+  return `${String(utc.getDate()).padStart(2,'0')}-${String(utc.getMonth()+1).padStart(2,'0')}-${utc.getFullYear()}`;
 }
 
-function loadData() {
-  try {
-    const d = localStorage.getItem(STORAGE_KEY);
-    if (d) { allData = JSON.parse(d); return true; }
-  } catch(e) {}
-  return false;
+function normaliseDatum(val){
+  if(!val && val !== 0) return '';
+  if(typeof val === 'number') return xlsxSerialToDate(val);
+  const s = String(val).trim();
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso) return `${iso[3]}-${iso[2]}-${iso[1]}`;
+  if(s.match(/^\d{2}-\d{2}-\d{4}$/)) return s;
+  return s;
 }
 
-// ---- EXPORT DATA ----
-function exportData() {
-  const dataStr = JSON.stringify(allData, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `coc_data_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  setStatus('✓ Data geëxporteerd');
-}
-// ---- PARSE EXCEL ----
-function parseExcel(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const wb = XLSX.read(e.target.result, { type: 'array' });
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, { raw: true, defval: '' });
-        const newEntries = [];
+function parseExcel(buffer){
+  const wb = XLSX.read(buffer, {type:'array', cellDates:true});
+  let rows = [];
 
-        rows.forEach(row => {
-          const name  = (row['Name'] || '').toString().trim();
-          const tag   = (row['Tag'] || '').toString().trim();
-          const warId = (row['War ID'] || '').toString().trim();
-          const ended = parseFloat(row['Ended']);
-          const type  = (row['War Type'] || 'Regular').toString().trim();
-          const missed= parseInt(row['Missed']) || 1;
-          const enemy = (row['Enemy Clan'] || '').toString().trim();
+  wb.SheetNames.forEach(name => {
+    const ws = wb.Sheets[name];
+    const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:false});
+    const rawNum = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', raw:true});
 
-          if (!name || !tag || !warId || isNaN(ended)) return;
+    if(!raw.length) return;
 
-          const uid = `${tag}_${warId}`;
-          const existing = allData.find(d => d.uid === uid);
-          if (existing) return;
+    let headerRow = -1;
+    raw.forEach((row, i) => {
+      const cells = row.map(c => String(c).toLowerCase());
+      const hasName = cells.some(c => c === 'naam' || c === 'name');
+      const hasMiss = cells.some(c => c.includes('gemist') || c.includes('miss') || c === 'missed');
+      if(hasName && hasMiss) headerRow = i;
+    });
 
-          const date = excelDateToDate(ended);
-          newEntries.push({ uid, name, tag, warId, date: date.toISOString(), type, missed, enemy });
-        });
+    if(headerRow === -1) return;
 
-        resolve(newEntries);
-      } catch(err) { reject(err); }
+    const headers = raw[headerRow].map(c => String(c).toLowerCase().trim());
+    const hi = k => headers.findIndex(h => h === k);
+    const hiPartial = (...parts) => headers.findIndex(h => parts.some(p => h.includes(p)));
+
+    const idx = {
+      naam:    hi('naam') >= 0 ? hi('naam') : hi('name'),
+      tag:     hi('tag'),
+      datum:   hi('datum') >= 0 ? hi('datum') : hiPartial('ended','date'),
+      war_type:hiPartial('war type','type'),
+      gemist:  hi('gemiste aanvallen') >= 0 ? hi('gemiste aanvallen')
+               : hi('gemist') >= 0 ? hi('gemist')
+               : hi('missed') >= 0 ? hi('missed')
+               : hiPartial('miss')
     };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
+
+    for(let i = headerRow + 1; i < raw.length; i++){
+      const row = raw[i];
+      const rowNum = rawNum[i];
+      const naam = String(row[idx.naam]||'').trim();
+      if(!naam || naam.toLowerCase() === 'naam' || naam.toLowerCase() === 'name') continue;
+
+      let datum = '';
+      if(idx.datum >= 0){
+        const rawVal = rowNum[idx.datum];
+        const strVal = row[idx.datum];
+        if(typeof rawVal === 'number' && rawVal > 1000){
+          datum = xlsxSerialToDate(rawVal);
+        } else if(strVal){
+          datum = normaliseDatum(strVal);
+        }
+      }
+
+      const war_type = idx.war_type >= 0 ? (String(row[idx.war_type]||'Regular').trim() || 'Regular') : 'Regular';
+      const gemist = idx.gemist >= 0 ? (parseInt(row[idx.gemist])||0) : 0;
+
+      if(naam && datum && gemist > 0){
+        rows.push({
+          naam,
+          tag: idx.tag >= 0 ? String(row[idx.tag]||'').trim() : '',
+          datum,
+          war_type,
+          gemist
+        });
+      }
+    }
+  });
+
+  return rows;
+}
+
+function getFilteredData(){
+  return allData.filter(r => {
+    const d = parseDate(r.datum);
+    if(!d) return false;
+    if(currentMonth && getMonthKey(d) !== currentMonth) return false;
+    if(currentFilter !== 'all' && r.war_type !== currentFilter) return false;
+    return true;
   });
 }
 
-// ---- RENDER ----
-function getMonths() {
-  const set = new Set();
-  allData.forEach(d => set.add(monthKey(new Date(d.date))));
-  return [...set].sort().reverse();
-}
-
-function getFiltered() {
-  if (activeMonth === 'ALL') return allData;
-  return allData.filter(d => monthKey(new Date(d.date)) === activeMonth);
-}
-
-function buildRanking(rows) {
+function aggregateByPlayer(rows){
   const map = {};
-  rows.forEach(d => {
-    if (!map[d.name]) map[d.name] = { name: d.name, total: 0, attacks: [] };
-    map[d.name].total += d.missed;
-    map[d.name].attacks.push(d);
+  rows.forEach(r => {
+    if(!map[r.naam]) map[r.naam] = {naam:r.naam, total:0, regular:0, cwl:0, events:[]};
+    map[r.naam].total += r.gemist;
+    if(r.war_type === 'CWL') map[r.naam].cwl += r.gemist;
+    else map[r.naam].regular += r.gemist;
+    map[r.naam].events.push({datum:r.datum, war_type:r.war_type, gemist:r.gemist});
   });
   return Object.values(map).sort((a,b) => b.total - a.total);
 }
 
-function renderStats(rows) {
-  const ranking = buildRanking(rows);
-  const totalMissed = rows.reduce((s,d) => s + d.missed, 0);
-  const totalWars = new Set(rows.map(d=>d.warId)).size;
+function updateStats(){
+  const filtered = currentMonth ? allData.filter(r => {
+    const d = parseDate(r.datum);
+    return d && getMonthKey(d) === currentMonth;
+  }) : allData;
 
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-num">${totalMissed}</div>
-      <div class="stat-label">Gemiste aanvallen</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">${ranking.length}</div>
-      <div class="stat-label">Spelers</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">${totalWars}</div>
-      <div class="stat-label">Wars</div>
-    </div>
-  `;
-}
+  const total = filtered.reduce((s,r) => s+r.gemist, 0);
+  const players = new Set(filtered.map(r=>r.naam)).size;
+  const months = getMonths().length;
 
-function renderMonthTabs() {
-  const months = getMonths();
-  const tabs = document.getElementById('monthTabs');
-  let html = `<button class="month-btn all-btn ${activeMonth==='ALL'?'active':''}" onclick="setMonth('ALL')"><span>Alle maanden</span></button>`;
-  
-  months.forEach(m => {
-    const totalMissed = allData.filter(d => monthKey(new Date(d.date)) === m).reduce((s,d)=>s+d.missed,0);
-    html += `<button class="month-btn ${activeMonth===m?'active':''}" onclick="setMonth('${m}')">
-      <span>${monthLabel(m)}<span class="count-badge">${totalMissed}x</span></span>
-    </button>`;
+  const playerTotals = {};
+  filtered.forEach(r => {
+    playerTotals[r.naam] = (playerTotals[r.naam]||0)+r.gemist;
   });
-  tabs.innerHTML = html;
+  const topPlayer = Object.entries(playerTotals).sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById('sTotaal').textContent = total||'—';
+  document.getElementById('sSpelers').textContent = players||'—';
+  document.getElementById('sBeste').textContent = topPlayer ? topPlayer[0] : '—';
+  document.getElementById('sMaanden').textContent = months||'—';
 }
 
-function renderRanking() {
-  const filtered = getFiltered();
-  const ranking = buildRanking(filtered);
-  const maxTotal = ranking[0]?.total || 1;
+function renderTabs(){
+  const months = getMonths();
+  const container = document.getElementById('monthTabs');
+  const allBtn = `<button class="tab${!currentMonth?' active':''}" onclick="setMonth(null)">Alle maanden</button>`;
+  const tabs = months.map(m => `<button class="tab${currentMonth===m?' active':''}" onclick="setMonth('${m}')">${getMonthLabel(m)}</button>`).join('');
+  container.innerHTML = allBtn + tabs;
+}
 
-  document.getElementById('rankingPeriod').textContent = activeMonth === 'ALL' ? 'Alle maanden' : monthLabel(activeMonth);
+function getRankDisplay(i){
+  if(i === 0) return `<span class="rank-medal">🥇</span>`;
+  if(i === 1) return `<span class="rank-medal">🥈</span>`;
+  if(i === 2) return `<span class="rank-medal">🥉</span>`;
+  return `<span style="font-family:'Cinzel Decorative',serif;font-size:12px;color:#6b4218">${i+1}</span>`;
+}
 
-  if (ranking.length === 0) {
-    document.getElementById('rankingBody').innerHTML = '';
-    document.getElementById('emptyState').style.display = 'block';
+function renderTable(){
+  const filtered = getFilteredData();
+  const players = aggregateByPlayer(filtered);
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyMsg');
+
+  if(!players.length){
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
     return;
   }
-  document.getElementById('emptyState').style.display = 'none';
+  empty.style.display = 'none';
 
-  const rows = ranking.map((player, i) => {
-    const rank = i + 1;
-    const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
-    const rankSymbol = rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : `#${rank}`;
-    const pct = Math.round((player.total / maxTotal) * 100);
+  const maxTotal = players[0].total;
 
-    const tooltipRows = player.attacks
-      .sort((a,b) => new Date(b.date) - new Date(a.date))
-      .map(a => {
-        const d = formatDate(new Date(a.date));
-        const badge = a.type === 'CWL' 
-          ? `<span class="war-badge war-cwl">CWL</span>` 
-          : `<span class="war-badge war-regular">WAR</span>`;
-        const mx = a.missed > 1 ? `<span class="missed-x">×${a.missed}</span>` : '';
-        return `<div class="tooltip-row">
-          <span class="tooltip-date">${d}</span>
-          ${badge}
-          <span class="tooltip-enemy">${a.enemy}</span>
-          ${mx}
-        </div>`;
-      }).join('');
+  tbody.innerHTML = players.map((p, i) => {
+    const pct = maxTotal > 0 ? Math.round((p.total/maxTotal)*100) : 0;
+    let badge = '';
+    if(p.cwl > 0 && p.regular > 0) badge = `<span class="war-badge badge-both">CWL + Regular</span>`;
+    else if(p.cwl > 0) badge = `<span class="war-badge badge-cwl">CWL</span>`;
+    else badge = `<span class="war-badge badge-reg">Regular</span>`;
 
-    const delay = i * 0.04;
+    const eventsJson = JSON.stringify(p.events).replace(/"/g,'&quot;');
 
-    return `<tr style="animation-delay:${delay}s">
-      <td><span class="rank-cell ${rankClass}">${rankSymbol}</span></td>
+    return `<tr>
+      <td class="rank">${getRankDisplay(i)}</td>
+      <td><span class="player-name"
+        onmouseenter="showTooltip(event,'${escHtml(p.naam)}','${eventsJson.replace(/'/g,"\\'")}')"
+        onmouseleave="hideTooltip()"
+        onmousemove="moveTooltip(event)"
+      >${escHtml(p.naam)}</span></td>
+      <td>${badge}</td>
       <td>
-        <div class="tooltip-wrapper">
-          <span class="name-cell tooltip-trigger">${player.name}</span>
-          <div class="tooltip-box">
-            <div class="tooltip-title">⚔ Gemiste aanvallen — ${player.name}</div>
-            ${tooltipRows}
-          </div>
+        <div class="miss-bar-wrap">
+          <span class="miss-num">${p.total}</span>
+          <div class="miss-bar"><div class="miss-fill" style="width:${pct}%"></div></div>
+          ${p.cwl>0&&p.regular>0 ? `<span class="miss-sub">${p.regular}R / ${p.cwl}C</span>` : ''}
         </div>
       </td>
-      <td class="missed-bar-cell">
-        <div class="missed-bar">
-          <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
-        </div>
-      </td>
-      <td><span class="bar-num">${player.total}</span></td>
     </tr>`;
+  }).join('');
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+const tooltip = document.getElementById('tooltip');
+
+function showTooltip(e, naam, eventsJson){
+  const events = JSON.parse(eventsJson.replace(/&quot;/g,'"'));
+  events.sort((a,b) => {
+    const da = parseDate(a.datum), db = parseDate(b.datum);
+    return db - da;
   });
 
-  document.getElementById('rankingBody').innerHTML = rows.join('');
+  let html = `<div class="tooltip-name">⚔️ ${escHtml(naam)}</div>`;
+  events.forEach(ev => {
+    const typeClass = ev.war_type === 'CWL' ? 'tt-cwl' : 'tt-reg';
+    html += `<div class="tooltip-row">
+      <span class="tooltip-date">${ev.datum}</span>
+      <span class="tooltip-type ${typeClass}">${ev.war_type}</span>
+      <span class="tooltip-miss">${ev.gemist} gemist</span>
+    </div>`;
+  });
+
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  positionTooltip(e);
 }
 
-function render() {
-  const filtered = getFiltered();
-  renderStats(filtered);
-  renderMonthTabs();
-  renderRanking();
+function positionTooltip(e){
+  const t = tooltip;
+  const x = e.clientX + 14;
+  const y = e.clientY - 10;
+  const maxX = window.innerWidth - t.offsetWidth - 16;
+  const maxY = window.innerHeight - t.offsetHeight - 16;
+  t.style.left = Math.min(x, maxX) + 'px';
+  t.style.top = Math.min(y, maxY) + 'px';
 }
 
-function setMonth(m) {
-  activeMonth = m;
-  render();
+function moveTooltip(e){ positionTooltip(e); }
+function hideTooltip(){ tooltip.style.display = 'none'; }
+
+function setMonth(m){
+  currentMonth = m;
+  renderTabs();
+  updateStats();
+  renderTable();
 }
 
-function showUI() {
-  document.getElementById('mainContent').style.display = 'block';
-  document.getElementById('statusBar').classList.add('visible');
+function setFilter(f){
+  currentFilter = f;
+  ['All','Cwl','Reg'].forEach(x => document.getElementById('f'+x).classList.remove('active'));
+  const map = {all:'All', CWL:'Cwl', Regular:'Reg'};
+  document.getElementById('f'+map[f]).classList.add('active');
+  renderTable();
 }
 
-function setStatus(text) {
-  document.getElementById('statusText').textContent = text;
+function setStatus(msg, type){
+  const el = document.getElementById('statusBar');
+  el.textContent = msg;
+  el.className = 'status-bar ' + (type||'');
 }
 
-// ---- FILE HANDLING ----
-async function handleFile(file) {
-  if (!file) return;
-  setStatus('Bezig met verwerken...');
-  document.getElementById('statusBar').classList.add('visible');
-
-  try {
-    const newEntries = await parseExcel(file);
-    allData = [...allData, ...newEntries];
-    saveData();
-    showUI();
-    render();
-    setStatus(`✓ ${file.name} geladen — ${newEntries.length} nieuwe rijen toegevoegd. Totaal: ${allData.length} records.`);
-  } catch(err) {
-    setStatus('❌ Fout bij inladen: ' + err.message);
+function handleFile(file){
+  if(!file || !file.name.match(/\.xlsx?$/i)){
+    setStatus('Alleen .xlsx of .xls bestanden worden ondersteund.', 'status-err');
+    return;
   }
+  setStatus('Bestand wordt verwerkt…');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const rows = parseExcel(new Uint8Array(e.target.result));
+      if(!rows.length){
+        setStatus('Geen geldige data gevonden. Controleer de kolomnamen.', 'status-err');
+        return;
+      }
+      const added = mergeNewData(rows);
+      saveData();
+      if(getMonths().length && !currentMonth) currentMonth = getMonths()[0];
+      renderTabs();
+      updateStats();
+      renderTable();
+      setStatus(`✓ ${rows.length} rijen gelezen · ${added} nieuw toegevoegd · ${rows.length-added} al aanwezig`, 'status-ok');
+    }catch(err){
+      setStatus('Fout bij inlezen: ' + err.message, 'status-err');
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
-document.getElementById('fileInput').addEventListener('change', e => {
-  if (e.target.files[0]) {
-    showPasswordModal(e.target.files[0]);
-  }
-  e.target.value = '';
-});
+const dz = document.getElementById('dropZone');
+const fi = document.getElementById('fileInput');
 
-// Drag & drop
-const zone = document.getElementById('uploadZone');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-zone.addEventListener('drop', e => {
+dz.addEventListener('click', ()=>fi.click());
+fi.addEventListener('change', e => handleFile(e.target.files[0]));
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', ()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
   e.preventDefault();
-  zone.classList.remove('drag-over');
-  if (e.dataTransfer.files[0]) {
-    showPasswordModal(e.dataTransfer.files[0]);
-  }
-});
-zone.addEventListener('click', () => document.getElementById('fileInput').click());
-
-// ---- TOOLTIP SMART POSITIONING ----
-document.addEventListener('mouseover', e => {
-  const trigger = e.target.closest('.tooltip-trigger');
-  if (!trigger) return;
-  const box = trigger.closest('.tooltip-wrapper')?.querySelector('.tooltip-box');
-  if (!box) return;
-
-  const rect = trigger.getBoundingClientRect();
-  const boxH = box.offsetHeight || 200;
-  const spaceBelow = window.innerHeight - rect.bottom;
-  const spaceAbove = rect.top;
-
-  box.style.left = Math.min(rect.left, window.innerWidth - 360) + 'px';
-
-  if (spaceBelow >= boxH + 12 || spaceBelow >= spaceAbove) {
-    box.style.top = (rect.bottom + 8) + 'px';
-    box.style.bottom = 'auto';
-  } else {
-    box.style.top = 'auto';
-    box.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
-  }
+  dz.classList.remove('drag-over');
+  handleFile(e.dataTransfer.files[0]);
 });
 
-// ---- INIT ----
-if (loadData() && allData.length > 0) {
-  showUI();
-  render();
-  setStatus(`✓ ${allData.length} records geladen vanuit opgeslagen data. Upload een nieuw bestand om data toe te voegen.`);
-}
+currentMonth = getMonths()[0] || null;
+renderTabs();
+updateStats();
+renderTable();
 </script>
 </body>
 </html>
