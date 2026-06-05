@@ -652,14 +652,33 @@ const STORAGE_KEY = 'coc_missed_attacks_v2';
 let allData = loadData();
 let currentMonth = null;
 let currentFilter = 'all';
+async function loadFromGitHub(){
+  try{
+    const res = await fetch("https://raw.githubusercontent.com/gajenixan/coc-missed/main/data.json");
+    if(!res.ok) throw new Error("GitHub data niet bereikbaar");
+    const data = await res.json();
+    return data;
+  }catch(err){
+    console.warn("GitHub laden mislukt, fallback naar localStorage:", err.message);
+    return null;
+  }
+}
+``
+async function loadData(){
+  // Eerst GitHub proberen
+  const githubData = await loadFromGitHub();
+  if(githubData && githubData.length){
+    return githubData;
+  }
 
-function loadData(){
+  // fallback: localStorage
   try{
     const s = localStorage.getItem(STORAGE_KEY);
     return s ? JSON.parse(s) : getSeedData();
-  }catch(e){ return getSeedData(); }
+  }catch(e){
+    return getSeedData();
+  }
 }
-
 function saveData(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
 }
