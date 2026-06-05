@@ -810,11 +810,12 @@ document.addEventListener('mouseover', e => {
 });
 
 // ---- INIT ----
-if (loadData() && allData.length > 0) {
-  showUI();
-  render();
-  setStatus(`✓ ${allData.length} records geladen vanuit opgeslagen data. Upload een nieuw bestand om data toe te voegen.`);
-}
+// Load data from GitHub first, then fall back to local storage
+loadDataWithFallback().then(success => {
+  if (success && allData.length > 0) {
+    // Data loaded successfully
+  }
+});
 </script>
 </body>
 </html>
