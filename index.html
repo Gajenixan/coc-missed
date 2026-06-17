@@ -190,6 +190,47 @@
     border-color: var(--accent);
   }
 
+  /* TOKEN MODAL */
+  .token-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .token-modal.show { display: flex; }
+  .token-content {
+    background: var(--panel);
+    border: 2px solid var(--regular);
+    border-radius: 12px;
+    padding: 32px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 0 40px rgba(16,185,129,0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .token-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 20px;
+    color: var(--regular);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .token-info {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    line-height: 1.6;
+    padding: 12px;
+    background: rgba(16,185,129,0.05);
+    border-radius: 6px;
+    border-left: 3px solid var(--regular);
+  }
+  .token-info strong { color: var(--text); }
+
   /* STATUS BAR */
   .status-bar {
     background: var(--panel);
@@ -237,9 +278,14 @@
     border-color: var(--accent);
     color: var(--accent);
   }
-  .control-btn.sync {
+  .control-btn.github {
     border-color: var(--regular);
     color: var(--regular);
+  }
+  .control-btn.github:hover {
+    border-color: var(--regular);
+    color: var(--regular);
+    background: rgba(16,185,129,0.1);
   }
 
   /* MONTH TABS */
@@ -538,6 +584,24 @@
     </div>
   </div>
 
+  <div id="tokenModal" class="token-modal">
+    <div class="token-content">
+      <div class="token-title">☁️ GitHub Setup Vereist</div>
+      <div class="token-info">
+        <strong>Eerste keer?</strong> Maak een Personal Access Token aan:<br>
+        1. Ga naar <strong>github.com/settings/tokens/new</strong><br>
+        2. Geef het de naam "COC Data"<br>
+        3. Selecteer alleen <strong>"repo"</strong> permissie<br>
+        4. Kopieer de token en plak hier
+      </div>
+      <input type="password" id="tokenInput" class="password-input" placeholder="GitHub Personal Access Token..." />
+      <div class="password-buttons">
+        <button class="password-btn" onclick="cancelToken()">Annuleren</button>
+        <button class="password-btn submit" onclick="saveToken()">Opslaan & Synchroniseren</button>
+      </div>
+    </div>
+  </div>
+
   <div id="statusBar" class="status-bar">
     <span class="status-dot"></span>
     <span id="statusText">Status...</span>
@@ -545,8 +609,7 @@
 
   <div id="mainContent" style="display: none;">
     <div class="controls-bar">
-      <button class="control-btn" onclick="exportData()">📥 Export Data</button>
-      <button class="control-btn sync" onclick="syncGitHub()">☁️ Sync GitHub</button>
+      <button class="control-btn github" onclick="openGitHubSetup()">⚙️ GitHub Instellingen</button>
     </div>
 
     <div class="month-section">
@@ -581,14 +644,51 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'coc_missed_attacks_data';
 const CORRECT_PASSWORD = 'Ghs@nd0kan';
 const GITHUB_REPO = 'gajenixan/coc-missed';
 const DATA_FILE = 'data.json';
+const TOKEN_KEY = 'gh_coc_token';
 
 let allData = [];
 let activeMonth = 'ALL';
 let pendingFile = null;
+let ghToken = null;
+
+// ---- GITHUB TOKEN MANAGEMENT ----
+function getGitHubToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function setGitHubToken(token) {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+  ghToken = token;
+}
+
+function openGitHubSetup() {
+  document.getElementById('tokenModal').classList.add('show');
+  document.getElementById('tokenInput').value = '';
+  document.getElementById('tokenInput').focus();
+}
+
+function saveToken() {
+  const token = document.getElementById('tokenInput').value.trim();
+  if (!token) {
+    alert('Token vereist!');
+    return;
+  }
+  setGitHubToken(token);
+  document.getElementById('tokenModal').classList.remove('show');
+  setStatus('✓ Token opgeslagen. Synchroniseren...');
+  loadFromGitHub();
+}
+
+function cancelToken() {
+  document.getElementById('tokenModal').classList.remove('show');
+}
 
 // ---- PASSWORD PROTECTION ----
 function showPasswordModal(file) {
@@ -602,8 +702,13 @@ function checkPassword() {
   const password = document.getElementById('passwordInput').value;
   if (password === CORRECT_PASSWORD) {
     document.getElementById('passwordModal').classList.remove('show');
-    handleFile(pendingFile);
-    pendingFile = null;
+    if (!ghToken) {
+      pendingFile = null;
+      openGitHubSetup();
+    } else {
+      handleFile(pendingFile);
+      pendingFile = null;
+    }
   } else {
     alert('❌ Incorrect wachtwoord');
     document.getElementById('passwordInput').value = '';
@@ -619,6 +724,11 @@ function cancelPassword() {
 document.getElementById('passwordInput')?.addEventListener('keypress', e => {
   if (e.key === 'Enter') checkPassword();
   if (e.key === 'Escape') cancelPassword();
+});
+
+document.getElementById('tokenInput')?.addEventListener('keypress', e => {
+  if (e.key === 'Enter') saveToken();
+  if (e.key === 'Escape') cancelToken();
 });
 
 // ---- UTILITIES ----
@@ -641,53 +751,52 @@ function monthLabel(key) {
   return `${names[parseInt(m)-1]} ${y}`;
 }
 
-// ---- DATA STORAGE ----
-function saveData() {
-  try { 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allData)); 
-  } catch(e) {}
-}
-
-function loadData() {
-  try {
-    const d = localStorage.getItem(STORAGE_KEY);
-    if (d) { allData = JSON.parse(d); return true; }
-  } catch(e) {}
-  return false;
-}
-
-// ---- EXPORT DATA ----
-function exportData() {
-  const dataStr = JSON.stringify(allData, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `coc_data_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  setStatus('✓ Data geëxporteerd');
-}
-
 // ---- GITHUB SYNC ----
-async function syncGitHub() {
-  setStatus('📡 GitHub sync wordt voorbereid...');
-  document.getElementById('statusBar').classList.add('visible');
-  
-  const token = prompt('🔐 GitHub Personal Access Token (met repo permissions):\n\nOp https://github.com/settings/tokens/new aanmaken');
-  if (!token) {
-    setStatus('❌ Sync geannuleerd');
+async function loadFromGitHub() {
+  if (!ghToken) {
+    setStatus('🔐 GitHub token nodig. Klik op ⚙️ instellingen.');
     return;
   }
+
+  setStatus('📥 Laden van GitHub...');
+  document.getElementById('statusBar').classList.add('visible');
+
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `token ${ghToken}` }
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      const content = atob(json.content);
+      allData = JSON.parse(content);
+      showUI();
+      render();
+      setStatus(`✓ ${allData.length} records geladen van GitHub`);
+    } else if (res.status === 404) {
+      showUI();
+      setStatus('✓ Klaar voor eerste upload');
+    } else {
+      const err = await res.json();
+      setStatus('❌ GitHub fout: ' + (err.message || 'Onbekend'));
+    }
+  } catch(err) {
+    setStatus('❌ Laad fout: ' + err.message);
+  }
+}
+
+async function saveToGitHub() {
+  if (!ghToken) return false;
 
   try {
     const dataStr = JSON.stringify(allData, null, 2);
     const content = btoa(unescape(encodeURIComponent(dataStr)));
 
-    // Get current file sha
+    // Get current file SHA
     const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`;
     const getRes = await fetch(getUrl, {
-      headers: { 'Authorization': `token ${token}` }
+      headers: { 'Authorization': `token ${ghToken}` }
     });
 
     let sha = null;
@@ -701,24 +810,27 @@ async function syncGitHub() {
     const pushRes = await fetch(pushUrl, {
       method: 'PUT',
       headers: {
-        'Authorization': `token ${token}`,
+        'Authorization': `token ${ghToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        message: `📊 Auto-sync: ${new Date().toLocaleString('nl-NL')}`,
+        message: `📊 Auto-update: ${new Date().toLocaleString('nl-NL')}`,
         content: content,
         sha: sha
       })
     });
 
     if (pushRes.ok) {
-      setStatus('✅ Data succesvol gesynced naar GitHub!');
+      setStatus('✓ Gegevens gesynchroniseerd naar GitHub');
+      return true;
     } else {
       const err = await pushRes.json();
-      setStatus('❌ GitHub sync fout: ' + (err.message || 'Onbekende fout'));
+      setStatus('❌ GitHub sync fout: ' + (err.message || 'Onbekend'));
+      return false;
     }
   } catch(err) {
     setStatus('❌ Sync fout: ' + err.message);
+    return false;
   }
 }
 
@@ -908,12 +1020,15 @@ async function handleFile(file) {
   try {
     const newEntries = await parseExcel(file);
     allData = [...allData, ...newEntries];
-    saveData();
-    showUI();
     render();
-    setStatus(`✓ ${file.name} geladen — ${newEntries.length} nieuwe rijen toegevoegd. Totaal: ${allData.length} records.`);
+    setStatus(`Bestanden verwerkt: ${newEntries.length} nieuwe rijen. Synchroniseren naar GitHub...`);
+    
+    const success = await saveToGitHub();
+    if (success) {
+      setStatus(`✓ ${newEntries.length} rijen toegevoegd. Totaal: ${allData.length} records. Gesynchroniseerd!`);
+    }
   } catch(err) {
-    setStatus('❌ Fout bij inladen: ' + err.message);
+    setStatus('❌ Fout: ' + err.message);
   }
 }
 
@@ -961,11 +1076,21 @@ document.addEventListener('mouseover', e => {
 });
 
 // ---- INIT ----
-if (loadData() && allData.length > 0) {
-  showUI();
-  render();
-  setStatus(`✓ ${allData.length} records geladen vanuit opgeslagen data.`);
+function init() {
+  ghToken = getGitHubToken();
+  
+  if (ghToken) {
+    setStatus('📥 GitHub token gevonden. Data laden...');
+    document.getElementById('statusBar').classList.add('visible');
+    loadFromGitHub();
+  } else {
+    showUI();
+    setStatus('🔐 GitHub token nodig. Klik op ⚙️ instellingen om in te stellen.');
+  }
 }
+
+// Start
+window.addEventListener('load', init);
 </script>
 </body>
 </html>
