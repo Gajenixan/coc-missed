@@ -237,7 +237,10 @@
     border-color: var(--accent);
     color: var(--accent);
   }
-
+  .control-btn.sync {
+    border-color: var(--regular);
+    color: var(--regular);
+  }
 
   /* MONTH TABS */
   .month-section { margin-bottom: 32px; }
@@ -543,6 +546,7 @@
   <div id="mainContent" style="display: none;">
     <div class="controls-bar">
       <button class="control-btn" onclick="exportData()">📥 Export Data</button>
+      <button class="control-btn sync" onclick="syncGitHub()">☁️ Sync GitHub</button>
     </div>
 
     <div class="month-section">
@@ -579,6 +583,8 @@
 <script>
 const STORAGE_KEY = 'coc_missed_attacks_data';
 const CORRECT_PASSWORD = 'Ghs@nd0kan';
+const GITHUB_REPO = 'gajenixan/coc-missed';
+const DATA_FILE = 'data.json';
 
 let allData = [];
 let activeMonth = 'ALL';
@@ -662,6 +668,60 @@ function exportData() {
   URL.revokeObjectURL(url);
   setStatus('✓ Data geëxporteerd');
 }
+
+// ---- GITHUB SYNC ----
+async function syncGitHub() {
+  setStatus('📡 GitHub sync wordt voorbereid...');
+  document.getElementById('statusBar').classList.add('visible');
+  
+  const token = prompt('🔐 GitHub Personal Access Token (met repo permissions):\n\nOp https://github.com/settings/tokens/new aanmaken');
+  if (!token) {
+    setStatus('❌ Sync geannuleerd');
+    return;
+  }
+
+  try {
+    const dataStr = JSON.stringify(allData, null, 2);
+    const content = btoa(unescape(encodeURIComponent(dataStr)));
+
+    // Get current file sha
+    const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`;
+    const getRes = await fetch(getUrl, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+
+    let sha = null;
+    if (getRes.ok) {
+      const json = await getRes.json();
+      sha = json.sha;
+    }
+
+    // Push update
+    const pushUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`;
+    const pushRes = await fetch(pushUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `📊 Auto-sync: ${new Date().toLocaleString('nl-NL')}`,
+        content: content,
+        sha: sha
+      })
+    });
+
+    if (pushRes.ok) {
+      setStatus('✅ Data succesvol gesynced naar GitHub!');
+    } else {
+      const err = await pushRes.json();
+      setStatus('❌ GitHub sync fout: ' + (err.message || 'Onbekende fout'));
+    }
+  } catch(err) {
+    setStatus('❌ Sync fout: ' + err.message);
+  }
+}
+
 // ---- PARSE EXCEL ----
 function parseExcel(file) {
   return new Promise((resolve, reject) => {
@@ -899,41 +959,12 @@ document.addEventListener('mouseover', e => {
     box.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
   }
 });
-async function loadFromGitHub() {
-  try {
-    setStatus('📥 Data ophalen van GitHub...');
-    document.getElementById('statusBar').classList.add('visible');
-
-    const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${DATA_FILE}`;
-
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('data.json niet gevonden op GitHub');
-
-    const data = await res.json();
-
-    if (!Array.isArray(data)) {
-      throw new Error('Ongeldig JSON formaat');
-    }
-
-    allData = data;
-    saveData();
-    showUI();
-    render();
-
-    setStatus(`✅ GitHub geladen (${data.length} records)`);
-  } catch (err) {
-    setStatus('❌ GitHub load fout: ' + err.message);
-  }
-}
 
 // ---- INIT ----
-
 if (loadData() && allData.length > 0) {
   showUI();
   render();
   setStatus(`✓ ${allData.length} records geladen vanuit opgeslagen data.`);
-} else {
-  loadFromGitHub();
 }
 </script>
 </body>
