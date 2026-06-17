@@ -447,7 +447,7 @@
     "date": "2026-04-08T12:09:56.000Z",
     "type": "CWL",
     "missed": 1,
-    "enemy": "ḭṆḊṏ"
+    "enemy": "á¸­á¹á¸á¹"
   },
   {
     "uid": "#V008U8L_5335369",
@@ -527,7 +527,7 @@
     "date": "2026-03-30T18:33:06.000Z",
     "type": "Regular",
     "missed": 2,
-    "enemy": "花中城-樱雨飘雪"
+    "enemy": "è±ä¸­å-æ¨±é¨é£éª"
   },
   {
     "uid": "#PL89G0YUL_5285130",
@@ -537,7 +537,7 @@
     "date": "2026-03-30T18:33:06.000Z",
     "type": "Regular",
     "missed": 2,
-    "enemy": "花中城-樱雨飘雪"
+    "enemy": "è±ä¸­å-æ¨±é¨é£éª"
   },
   {
     "uid": "#2PC9QRJ9V_5285130",
@@ -547,7 +547,7 @@
     "date": "2026-03-30T18:33:06.000Z",
     "type": "Regular",
     "missed": 1,
-    "enemy": "花中城-樱雨飘雪"
+    "enemy": "è±ä¸­å-æ¨±é¨é£éª"
   },
   {
     "uid": "#2YYGU200Q_5274465",
@@ -717,7 +717,7 @@
     "date": "2026-03-05T11:28:14.000Z",
     "type": "CWL",
     "missed": 1,
-    "enemy": "✨SOUL MATES✨"
+    "enemy": "â¨SOUL MATESâ¨"
   },
   {
     "uid": "#C0UUR9R0_5114986",
@@ -867,7 +867,7 @@
     "date": "2026-02-13T19:59:20.000Z",
     "type": "Regular",
     "missed": 2,
-    "enemy": "ملوك الكلاش"
+    "enemy": "ÙÙÙÙ Ø§ÙÙÙØ§Ø´"
   },
   {
     "uid": "#Q82RUY9P_5055515",
@@ -877,7 +877,7 @@
     "date": "2026-02-13T19:59:20.000Z",
     "type": "Regular",
     "missed": 1,
-    "enemy": "ملوك الكلاش"
+    "enemy": "ÙÙÙÙ Ø§ÙÙÙØ§Ø´"
   },
   {
     "uid": "#GV89JURJ_5055515",
@@ -887,7 +887,7 @@
     "date": "2026-02-13T19:59:20.000Z",
     "type": "Regular",
     "missed": 1,
-    "enemy": "ملوك الكلاش"
+    "enemy": "ÙÙÙÙ Ø§ÙÙÙØ§Ø´"
   },
   {
     "uid": "#L9PC8VGQP_5055515",
@@ -897,7 +897,7 @@
     "date": "2026-02-13T19:59:20.000Z",
     "type": "Regular",
     "missed": 2,
-    "enemy": "ملوك الكلاش"
+    "enemy": "ÙÙÙÙ Ø§ÙÙÙØ§Ø´"
   },
   {
     "uid": "#2LJCCJ8Q_5055515",
@@ -907,7 +907,7 @@
     "date": "2026-02-13T19:59:20.000Z",
     "type": "Regular",
     "missed": 1,
-    "enemy": "ملوك الكلاش"
+    "enemy": "ÙÙÙÙ Ø§ÙÙÙØ§Ø´"
   },
   {
     "uid": "#YRRVQYV8_5038992",
@@ -1038,5 +1038,85 @@
     "type": "CWL",
     "missed": 1,
     "enemy": "BD FIGHTERS"
+  },
+  {
+    "uid": "#V008U8L_5743287",
+    "name": "_*.TDV8.*_",
+    "tag": "#V008U8L",
+    "warId": "5743287",
+    "date": "2026-06-13T17:33:48.000Z",
+    "type": "Regular",
+    "missed": 1,
+    "enemy": "Mumbai Anarchy4"
+  },
+  {
+    "uid": "#L22P9QQ_5743287",
+    "name": "theshee 77",
+    "tag": "#L22P9QQ",
+    "warId": "5743287",
+    "date": "2026-06-13T17:33:48.000Z",
+    "type": "Regular",
+    "missed": 1,
+    "enemy": "Mumbai Anarchy4"
+  },
+  {
+    "uid": "#PUGGLQ89P_5743287",
+    "name": "Mr.noah",
+    "tag": "#PUGGLQ89P",
+    "warId": "5743287",
+    "date": "2026-06-13T17:33:48.000Z",
+    "type": "Regular",
+    "missed": 2,
+    "enemy": "Mumbai Anarchy4"
+  },
+  {
+    "uid": "#2LJCCJ8Q_5743287",
+    "name": "GwnJohny",
+    "tag": "#2LJCCJ8Q",
+    "warId": "5743287",
+    "date": "2026-06-13T17:33:48.000Z",
+    "type": "Regular",
+    "missed": 1,
+    "enemy": "Mumbai Anarchy4"
+  },
+  {
+    "uid": "#LUJ8CGYR_5743287",
+    "name": "Nozzie",
+    "tag": "#LUJ8CGYR",
+    "warId": "5743287",
+    "date": "2026-06-13T17:33:48.000Z",
+    "type": "Regular",
+    "missed": 1,
+    "enemy": "Mumbai Anarchy4"
+  },
+  {
+    "uid": "#82QY22PVY_5699005",
+    "name": "koekwous!",
+    "tag": "#82QY22PVY",
+    "warId": "5699005",
+    "date": "2026-06-08T18:45:30.000Z",
+    "type": "CWL",
+    "missed": 1,
+    "enemy": "INDIANPOWER"
+  },
+  {
+    "uid": "#88RVU9PVU_5699005",
+    "name": "lennardtc",
+    "tag": "#88RVU9PVU",
+    "warId": "5699005",
+    "date": "2026-06-08T18:45:30.000Z",
+    "type": "CWL",
+    "missed": 1,
+    "enemy": "INDIANPOWER"
+  },
+  {
+    "uid": "#88VQVJGC0_5685265",
+    "name": "Alan-Michel12",
+    "tag": "#88VQVJGC0",
+    "warId": "5685265",
+    "date": "2026-06-07T18:42:29.000Z",
+    "type": "CWL",
+    "missed": 1,
+    "enemy": "Bier2Chill"
   }
 ]
